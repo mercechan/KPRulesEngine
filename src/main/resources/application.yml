@@ -1,3 +1,5 @@
+server:
+  port: 8877 
 spring:
   jpa:
     show-sql: true
@@ -6,7 +8,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5InnoDBDialect
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
   datasource:
     url: jdbc:mysql://localhost:3388/kprules?useSSL=false&serverTimezone=UTC&useLegacyDatetimeCode=false
     username: kprules

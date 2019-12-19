@@ -12,8 +12,6 @@ import lombok.EqualsAndHashCode;
 
 @Entity
 @Table(name = "RuleSets")
-@Data
-@EqualsAndHashCode
 public class RuleSets extends AuditModel {
 
 	private static final long serialVersionUID = -8179724845359681502L;
@@ -30,5 +28,29 @@ public class RuleSets extends AuditModel {
     @Size(max = 15000)
     @Column(name = "content")
     private String content;
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getContent() {
+		return content;
+	}
+
+	public void setContent(String content) {
+		this.content = content;
+	}
     
 }
