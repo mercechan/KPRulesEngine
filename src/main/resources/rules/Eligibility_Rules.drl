@@ -1,0 +1,19 @@
+template header
+
+
+	rule_condition
+	rule_actions
+
+	package org.kp.rulesengine;
+	import java.util.List;
+
+	template "Eligibility"
+		rule "eligibility_@{row.rowNumber}"
+		
+			when
+			  $mortgage: Mortgage(@{rule_cond})
+			then
+			  @{rule_cons}
+		end
+
+end template
