@@ -31,12 +31,29 @@ public class Rules extends AuditModel {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
+	public RuleSets getRuleSet() {
+		return ruleSet;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setRuleSet(RuleSets ruleSet) {
+		this.ruleSet = ruleSet;
+	}
+
+	@NotNull
+    @Size(max = 255)
+    @Column(unique = true, name = "rule_name")
+    private String rule_name;    
+    
+    @Column(nullable = true, name = "rule_cond")
+    @Size(max = 1000)
+    private String rule_cond;	
+	
+    public String getRule_name() {
+		return rule_name;
+	}
+
+	public void setRule_name(String rule_name) {
+		this.rule_name = rule_name;
 	}
 
 	public String getRule_cond() {
@@ -55,51 +72,35 @@ public class Rules extends AuditModel {
 		this.rule_cons = rule_cons;
 	}
 
-	public Integer getSalience() {
-		return salience;
+	public String getRule_salience() {
+		return rule_salience;
 	}
 
-	public void setSalience(Integer salience) {
-		this.salience = salience;
+	public void setRule_salience(String rule_salience) {
+		this.rule_salience = rule_salience;
 	}
 
-	public String getActivationGroup() {
-		return activationGroup;
+	public String getRule_activationgroup() {
+		return rule_activationgroup;
 	}
 
-	public void setActivationGroup(String activationGroup) {
-		this.activationGroup = activationGroup;
+	public void setRule_activationgroup(String rule_activationgroup) {
+		this.rule_activationgroup = rule_activationgroup;
 	}
 
-	public RuleSets getRuleSet() {
-		return ruleSet;
-	}
-
-	public void setRuleSet(RuleSets ruleSet) {
-		this.ruleSet = ruleSet;
-	}
-
-	@NotNull
-    @Size(max = 255)
-    @Column(unique = true, name = "name")
-    private String name;    
-    
-    @Column(nullable = true, name = "rule_cond")
-    @Size(max = 1000)
-    private String rule_cond;	
-	
-    @Column(nullable = true, name = "rule_cons")
+	@Column(nullable = true, name = "rule_cons")
     @Size(max = 1000)
     private String rule_cons;	
 	
     @NotNull
-    @Column(name = "salience")
-	private Integer salience;
+    @Column(name = "rule_salience")
+    @Size(max = 255)
+	private String rule_salience;
     
     @NotNull
     @Size(max = 255)
-    @Column(name = "activationGroup")
-    private String activationGroup;
+    @Column(name = "rule_activationgroup")
+    private String rule_activationgroup;
     
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ruleSetId", nullable = false)
@@ -110,7 +111,7 @@ public class Rules extends AuditModel {
     @Override
     public String toString() {
     	return String.format(
-    			"[name]: %s [rule_cond]: %s [rule_cons]: %s [activationGroup]: %s [salience]: %s", 
-    			name, rule_cond, rule_cons, activationGroup, salience);
+    			"[rule_name]: %s [rule_cond]: %s [rule_cons]: %s [rule_activationgroup]: %s [rule_salience]: %s", 
+    			rule_name, rule_cond, rule_cons, rule_activationgroup, rule_salience);
     }
 }

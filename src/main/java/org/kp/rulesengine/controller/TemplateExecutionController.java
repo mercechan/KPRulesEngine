@@ -63,6 +63,9 @@ public class TemplateExecutionController {
 		for (Rules r: listOfRules)
 		{
 			if (rs == null) rs = r.getRuleSet();
+			rule1.put("rule_name", r.getRule_name());
+			rule1.put("rule_salience", r.getRule_salience());
+			rule1.put("rule_activationgroup", r.getRule_activationgroup());
 			rule1.put("rule_cond", r.getRule_cond());
 			rule1.put("rule_cons", r.getRule_cons());
 		}

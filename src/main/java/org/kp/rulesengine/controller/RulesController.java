@@ -55,12 +55,12 @@ public class RulesController {
         }
 
         return rulesRepository.findById(ruleId).map(r -> {
-        	r.setActivationGroup(rule.getActivationGroup());
-        	r.setName(rule.getName());
+        	r.setRule_name(rule.getRule_name());
+        	r.setRule_salience(rule.getRule_salience());
+        	r.setRule_activationgroup(rule.getRule_activationgroup());
         	r.setRule_cond(rule.getRule_cond());
         	r.setRule_cons(rule.getRule_cons());
-        	r.setSalience(rule.getSalience());
-
+        	
             return rulesRepository.save(r);
         }).orElseThrow(() -> new ResourceNotFoundException("ruleId " + ruleId + "not found"));
     }    

@@ -208,10 +208,18 @@ public class DroolsUtility {
 		});		
 	}
 
+	public static KieSession createKieSession(List<Map<String, Object>> ruleAttributes, InputStream templateStream)
+	{
+		KieBase kieBase = createKieBase(ruleAttributes, templateStream);
+		return kieBase.newKieSession();
+	}
+	
 	public static KieBase createKieBase(List<Map<String, Object>> ruleAttributes, InputStream templateStream)
 	{
 		ObjectDataCompiler compiler = new ObjectDataCompiler();
     	String generatedDRL = compiler.compile(ruleAttributes, templateStream);
+
+    	logger.info(generatedDRL);
     	KieServices kieServices = KieServices.Factory.get();
     	KieHelper kieHelper = new KieHelper();
 
@@ -224,8 +232,5 @@ public class DroolsUtility {
     	KieBase kieBase = kieHelper.build();    			
     	return kieBase;
 	}
-
-
-
 
 }
