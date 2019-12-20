@@ -1,7 +1,5 @@
 package org.kp.rulesengine.controller;
 
-import static org.junit.Assert.assertNotNull;
-
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
