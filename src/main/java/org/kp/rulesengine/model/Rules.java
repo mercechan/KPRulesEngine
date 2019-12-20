@@ -106,4 +106,11 @@ public class Rules extends AuditModel {
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnore
     private RuleSets ruleSet;
+    
+    @Override
+    public String toString() {
+    	return String.format(
+    			"[name]: %s [rule_cond]: %s [rule_cons]: %s [activationGroup]: %s [salience]: %s", 
+    			name, rule_cond, rule_cons, activationGroup, salience);
+    }
 }

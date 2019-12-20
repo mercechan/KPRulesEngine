@@ -17,6 +17,8 @@
 	<properties>
 		<java.version>1.8</java.version>
 		<maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
+		<!-- <drools.version>5.2.1.Final</drools.version>  -->
+		<drools.version>6.5.0.Final</drools.version>
 	</properties>
 
 	<dependencies>
@@ -84,27 +86,24 @@
 		<dependency>
 		    <groupId>org.drools</groupId>
 		    <artifactId>drools-compiler</artifactId>
-		    <version>6.5.0.Final</version>
+		    <!-- <version>5.2.1.Final</version> -->
+		    <version>${drools.version}</version>
 		</dependency>
 	    <dependency>
 	      <groupId>org.drools</groupId>
 	      <artifactId>drools-core</artifactId>
-	      <version>6.5.0.Final</version>
+	      <version>${drools.version}</version>
 	    </dependency>
 	    <dependency>
 	      <groupId>org.drools</groupId>
 	      <artifactId>drools-decisiontables</artifactId>
-	      <version>6.5.0.Final</version>
+	      <version>${drools.version}</version>
 	    </dependency>		
-	    <dependency>
-	      <groupId>org.drools</groupId>
-	      <artifactId>drools-jsr94</artifactId>
-	      <version>6.5.0.Final</version>
-	    </dependency>		
+	
 	    <dependency>
 	      <groupId>org.drools</groupId>
 	      <artifactId>knowledge-api</artifactId>
-	      <version>6.5.0.Final</version>
+	      <version>${drools.version}</version>
 	    </dependency>		
 		<!-- Drools related dependencies -->
 		
