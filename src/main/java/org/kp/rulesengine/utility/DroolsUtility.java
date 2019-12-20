@@ -30,6 +30,7 @@ import org.kie.api.io.Resource;
 import org.kie.api.io.ResourceType;
 import org.kie.api.runtime.KieSession;
 import org.kie.internal.utils.KieHelper;
+import org.kp.rulesengine.business.KPRuleTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -214,8 +215,28 @@ public class DroolsUtility {
 		return kieBase.newKieSession();
 	}
 	
+	public static KieBase createKieBase(List<KPRuleTemplate> ruleTemplates)
+	{
+		// multiple templates and their rules
+    	KieServices kieServices = KieServices.Factory.get();
+    	KieHelper kieHelper = new KieHelper();
+    	
+		for(KPRuleTemplate t: ruleTemplates){
+			ObjectDataCompiler compiler = new ObjectDataCompiler();
+	    	String generatedDRL = compiler.compile(t.getRuleAttributes(), t.getTemplateStream());
+	    	logger.info(generatedDRL);
+	    	byte[] b1 = generatedDRL.getBytes();
+	    	Resource resource1 = kieServices.getResources().newByteArrayResource(b1);
+	    	kieHelper.addResource(resource1, ResourceType.DRL);
+		}
+		
+    	KieBase kieBase = kieHelper.build();    			
+    	return kieBase;
+	}
+	
 	public static KieBase createKieBase(List<Map<String, Object>> ruleAttributes, InputStream templateStream)
 	{
+		// single template and rules
 		ObjectDataCompiler compiler = new ObjectDataCompiler();
     	String generatedDRL = compiler.compile(ruleAttributes, templateStream);
 

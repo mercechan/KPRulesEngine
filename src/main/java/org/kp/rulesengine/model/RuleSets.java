@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
 
 
 @Entity
-@Table(name = "RuleSets")
+@Table(name = "rule_sets")
 public class RuleSets extends AuditModel {
 
 	private static final long serialVersionUID = -8179724845359681502L;
@@ -28,6 +28,19 @@ public class RuleSets extends AuditModel {
     @Size(max = 15000)
     @Column(name = "content")
     private String content;
+
+    @NotNull
+    @Size(max = 255)
+    @Column(unique = true, name = "package_name")
+    private String package_name;    
+
+	public String getPackage_name() {
+		return package_name;
+	}
+
+	public void setPackage_name(String package_name) {
+		this.package_name = package_name;
+	}
 
 	public Long getId() {
 		return id;
@@ -53,4 +66,11 @@ public class RuleSets extends AuditModel {
 		this.content = content;
 	}
     
+	@Override
+	public String toString() {
+    	return String.format(
+    			"[id]: %s [name]: %s [package_name]: %s [content]: %s ", 
+    			id, name, package_name, content);
+
+	}
 }

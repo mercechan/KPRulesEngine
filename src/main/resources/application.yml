@@ -8,7 +8,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5InnoDBDialect
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
   datasource:
     url: jdbc:mysql://localhost:3388/kprules?useSSL=false&serverTimezone=UTC&useLegacyDatetimeCode=false
     username: kprules

@@ -126,6 +126,9 @@ public class TemplateExecutionController {
 	    * [fact type name]: com.rhc.drools.OutParameter, [fact type simple name]: OutParameter
 	    * [global name]: out, [global type]: com.rhc.drools.OutParameter
 	    */
+	   
+	   
+	   
 	   Collection<KiePackage> pkgs = kieBase.getKiePackages();
 	   for(KiePackage pkg : pkgs)
 	   {

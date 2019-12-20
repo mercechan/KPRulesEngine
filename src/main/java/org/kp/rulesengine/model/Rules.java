@@ -14,7 +14,7 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 
 @Entity
-@Table(name = "Rules")
+@Table(name = "rules")
 public class Rules extends AuditModel {
 
 	private static final long serialVersionUID = 8075480913072799924L;
@@ -103,7 +103,7 @@ public class Rules extends AuditModel {
     private String rule_activationgroup;
     
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ruleSetId", nullable = false)
+    @JoinColumn(name = "rule_set_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnore
     private RuleSets ruleSet;
@@ -111,7 +111,7 @@ public class Rules extends AuditModel {
     @Override
     public String toString() {
     	return String.format(
-    			"[rule_name]: %s [rule_cond]: %s [rule_cons]: %s [rule_activationgroup]: %s [rule_salience]: %s", 
-    			rule_name, rule_cond, rule_cons, rule_activationgroup, rule_salience);
+    			"[rule_name]: %s [rule_cond]: %s [rule_cons]: %s [rule_activationgroup]: %s [rule_salience]: %s [ruleSet]: %s", 
+    			rule_name, rule_cond, rule_cons, rule_activationgroup, rule_salience, ruleSet);
     }
 }

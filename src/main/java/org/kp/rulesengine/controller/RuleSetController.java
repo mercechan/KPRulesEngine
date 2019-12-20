@@ -26,7 +26,7 @@ public class RuleSetController {
 	private RuleSetsRepository ruleSetRepository;
 	
     @GetMapping("/rulesets")
-    public Page<RuleSets> getAllPosts(Pageable pageable) {
+    public Page<RuleSets> getAllRuleSets(Pageable pageable) {
         return ruleSetRepository.findAll(pageable);
     }	
 	
@@ -41,6 +41,7 @@ public class RuleSetController {
         return ruleSetRepository.findById(ruleSetId).map(template -> {
         	template.setContent(ruleSetRequest.getContent());
         	template.setName(ruleSetRequest.getName());
+        	template.setPackage_name(ruleSetRequest.getPackage_name());
             return ruleSetRepository.save(template);
         }).orElseThrow(() -> new ResourceNotFoundException("ruleSetId " + ruleSetId + " not found"));
     }    
