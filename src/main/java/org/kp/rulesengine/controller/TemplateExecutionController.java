@@ -1,37 +1,34 @@
 package org.kp.rulesengine.controller;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.kie.api.io.Resource;
-import org.kie.api.io.ResourceType;
-import org.kie.api.runtime.KieSession;
-import org.drools.template.ObjectDataCompiler;
 import org.kie.api.KieBase;
-import org.kie.api.KieServices;
+import org.kie.api.definition.KiePackage;
 import org.kie.api.definition.type.FactType;
-import org.kie.internal.utils.KieHelper;
+import org.kie.api.runtime.KieSession;
 import org.kp.rulesengine.model.RuleSets;
 import org.kp.rulesengine.model.Rules;
 import org.kp.rulesengine.repository.RuleSetsRepository;
 import org.kp.rulesengine.repository.RulesRepository;
 import org.kp.rulesengine.utility.DroolsUtility;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import org.kie.api.definition.rule.Global;
 
 @RestController
 public class TemplateExecutionController {
+	private static final Logger logger = LoggerFactory.getLogger(TemplateExecutionController.class);
     @Autowired
     private RulesRepository rulesRepository;
 	@Autowired
@@ -72,8 +69,13 @@ public class TemplateExecutionController {
     	InputStream templateStream = new ByteArrayInputStream(rs.getContent().getBytes());
     	KieBase kieBase = DroolsUtility.createKieBase(ruleAttributes, templateStream);
     	KieSession kieSession = kieBase.newKieSession();
-    	
     	DroolsUtility.addListenersToKieSession(kieSession);
+
+    	// display metadata before executing the rules
+    	displayMetaDataforKieBase(kieBase);
+    	// end display metadatra before executing the rules
+    	
+    	
     	
     	// execute rules on kieSession
 		FactType serverType = kieBase
@@ -115,5 +117,46 @@ public class TemplateExecutionController {
     	kieSession.dispose();
     	// end executing rules
     }
+   
+   private void displayMetaDataforKieBase(KieBase kieBase)
+   {
+	   /*
+	    * [package name]: com.rhc.drools
+	    * [fact type name]: com.rhc.drools.Server, [fact type simple name]: Server
+	    * [fact type name]: com.rhc.drools.OutParameter, [fact type simple name]: OutParameter
+	    * [global name]: out, [global type]: com.rhc.drools.OutParameter
+	    */
+	   Collection<KiePackage> pkgs = kieBase.getKiePackages();
+	   for(KiePackage pkg : pkgs)
+	   {
+		   logger.info("[package name]: {}", pkg.getName());
+		   
+		   Collection<FactType> fts = pkg.getFactTypes();
+		   for(FactType ft: fts){
+			   logger.info("[fact type name]: {}, [fact type simple name]: {}",ft.getName(), ft.getSimpleName());
+		   }
+		   
+		   Collection<Global> gls = pkg.getGlobalVariables();
+		   for (Global gl : gls){
+			   logger.info("[global name]: {}, [global type]: {}",gl.getName(), gl.getType());
+		   }
+	   }
+   }
 	
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
 }
