@@ -1,0 +1,33 @@
+type Query {
+	getAllRuleSets(count: Int): [RuleSet]
+}
+
+type RuleSet{
+	id: Long!
+	name: String!
+	package_name: String!
+	content: String!
+	createdAt: String!
+	updatedAt: String!
+	inserts: [FactType]
+	globals: [FactType]
+}
+
+type Rule{
+	id: Long!
+	rule_activationgroup: String!
+	rule_cond: String!
+	rule_cons: String! 
+	rule_name: String!
+	rule_salience: String!	
+	createdAt: String!
+	updatedAt: String!
+	rule_set: RuleSet!
+}
+
+type FactType{
+	package_name: String
+	variable_name: String
+	fields: [String]
+}
+

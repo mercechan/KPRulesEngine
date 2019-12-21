@@ -1,5 +1,6 @@
 server:
   port: 8877 
+# spring boot jpa related properties  
 spring:
   jpa:
     show-sql: true
@@ -19,5 +20,16 @@ logging:
       hibernate:
         SQL: DEBUG
         type: TRACE
-
-
+# graphql related properties
+graphql:
+  servlet:
+    corsEnabled: true
+    mapping: /graphql
+    enabled: true
+graphiql:
+  mapping: /graphiql
+  endpoint: /graphql
+  enabled: true
+  cdn:
+    enabled: false
+    version: 0.11.11

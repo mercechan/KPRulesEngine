@@ -25,6 +25,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.kie.api.definition.rule.Global;
+import org.kie.api.definition.type.FactField;
+
+
 
 @RestController
 public class TemplateExecutionController {
@@ -121,6 +124,7 @@ public class TemplateExecutionController {
    private void displayMetaDataforKieBase(KieBase kieBase)
    {
 	   /*
+	    * Fact type is essentially a input parameter and or an output parameter
 	    * [package name]: com.rhc.drools
 	    * [fact type name]: com.rhc.drools.Server, [fact type simple name]: Server
 	    * [fact type name]: com.rhc.drools.OutParameter, [fact type simple name]: OutParameter
@@ -128,22 +132,44 @@ public class TemplateExecutionController {
 	    */
 	   
 	   
-	   
+	   // display packages
 	   Collection<KiePackage> pkgs = kieBase.getKiePackages();
 	   for(KiePackage pkg : pkgs)
 	   {
 		   logger.info("[package name]: {}", pkg.getName());
-		   
-		   Collection<FactType> fts = pkg.getFactTypes();
-		   for(FactType ft: fts){
-			   logger.info("[fact type name]: {}, [fact type simple name]: {}",ft.getName(), ft.getSimpleName());
-		   }
-		   
+
+		   // display globals
 		   Collection<Global> gls = pkg.getGlobalVariables();
 		   for (Global gl : gls){
 			   logger.info("[global name]: {}, [global type]: {}",gl.getName(), gl.getType());
 		   }
+		   
+		   // display fact types
+		   Collection<FactType> fts = pkg.getFactTypes();
+		   for(FactType ft: fts){
+			   if(isFacttypeInGlobal(ft,gls)){
+				   logger.info("[fact type name(no insert, found in globals)]: {}, [fact type simple name]: {}",ft.getName(), ft.getSimpleName());   
+			   }else{
+				   logger.info("[fact type name(do insert)]: {}, [fact type simple name]: {}",ft.getName(), ft.getSimpleName());
+			   }
+			   
+			   List<FactField> fields = ft.getFields();
+			   for(FactField field: fields){
+				   logger.info("\t\t\t [field]: {}, [field type]: {}", field.getName(), field.getType().getName());
+			   }
+		   }
 	   }
+   }
+   
+   private boolean isFacttypeInGlobal(FactType fact, Collection<Global> globals){
+	   boolean found = false;
+	   
+	   for(Global g: globals){
+		   if(g.getType().equalsIgnoreCase(fact.getName())){
+			   return true;
+		   }
+	   }
+	   return found;
    }
 	
    
