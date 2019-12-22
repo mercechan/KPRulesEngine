@@ -1,4 +1,8 @@
-type Query {
+schema {
+  query: KPRulesEngineQuery
+}
+
+type KPRulesEngineQuery {
 	getAllRuleSets(count: Int): [RuleSet]
 	fireAllRulesForRuleSet(
 		ruleSetId: Long, 
