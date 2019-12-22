@@ -2,6 +2,7 @@ package org.kp.rulesengine.controller;
 
 import org.kp.rulesengine.repository.RuleSetsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +12,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import javax.validation.Valid;
 
 import org.kp.rulesengine.exception.ResourceNotFoundException;
@@ -30,6 +35,38 @@ public class RuleSetController {
         return ruleSetRepository.findAll(pageable);
     }	
 	
+    @GetMapping("/rulesets/{ruleSetId}")
+    public RuleSets getOneRuleSetById(@PathVariable Long ruleSetId){
+    	RuleSets result = null;
+    	RuleSets rs = new RuleSets();
+    	rs.setId(1L);    	
+    	Example<RuleSets> example = Example.of(rs);
+    	Optional<RuleSets> actual = ruleSetRepository.findOne(example);
+    	if(actual.isPresent()){
+    		result = actual.get();
+    	}else{
+    		result = new RuleSets();
+    	}
+    	return result;
+    }
+    
+    @GetMapping("/rulesets/names/{ruleSetName}")
+    public RuleSets getOneRuleSetById(@PathVariable String ruleSetName){
+    	RuleSets result = null;
+
+		RuleSets rs = new RuleSets();
+		rs.setName(ruleSetName);   	
+		Example<RuleSets> example = Example.of(rs);
+		Optional<RuleSets> actual = ruleSetRepository.findOne(example);
+		if(actual.isPresent()){
+			result = actual.get();
+		}else{
+			result = new RuleSets();
+		}
+
+    	return result;
+    }    
+    
     @PostMapping("/rulesets")
     public RuleSets createRuleSet(@Valid @RequestBody RuleSets ruleSet) {
         return ruleSetRepository.save(ruleSet);
