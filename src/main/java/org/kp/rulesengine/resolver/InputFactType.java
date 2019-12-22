@@ -2,7 +2,7 @@ package org.kp.rulesengine.resolver;
 
 import java.util.List;
 
-public class FactType {
+public class InputFactType {
 	private String variable_name;
 	public String getVariable_name() {
 		return variable_name;
@@ -25,6 +25,4 @@ public class FactType {
 	public void setFields(List<Field> fields) {
 		this.fields = fields;
 	}
-
-
 }

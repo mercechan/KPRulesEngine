@@ -7,10 +7,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+
 import org.kie.api.KieBase;
 import org.kie.api.definition.KiePackage;
 import org.kie.api.definition.type.FactType;
 import org.kie.api.runtime.KieSession;
+
 import org.kp.rulesengine.model.RuleSets;
 import org.kp.rulesengine.model.Rules;
 import org.kp.rulesengine.repository.RuleSetsRepository;
@@ -28,6 +31,11 @@ import org.kie.api.definition.rule.Global;
 import org.kie.api.definition.type.FactField;
 
 
+import org.kie.api.runtime.KieContainer;
+import org.kie.api.runtime.KieSession;
+import org.kie.api.runtime.ObjectFilter;
+import org.kie.api.runtime.rule.FactHandle;
+
 
 @RestController
 public class TemplateExecutionController {
@@ -39,7 +47,7 @@ public class TemplateExecutionController {
 	
    @GetMapping("/template/{ruleSetId}/execute")
     public void getAllRulesByRuleSetId(@PathVariable (value = "ruleSetId") Long ruleSetId,
-                                                Pageable pageable)  
+                                                Pageable pageable) throws InstantiationException, IllegalAccessException  
    {
     	Page<Rules> pageOfRules = rulesRepository.findByRuleSetId(ruleSetId, pageable);
     	List<Rules> listOfRules = pageOfRules.getContent();
@@ -72,54 +80,90 @@ public class TemplateExecutionController {
     	InputStream templateStream = new ByteArrayInputStream(rs.getContent().getBytes());
     	KieBase kieBase = DroolsUtility.createKieBase(ruleAttributes, templateStream);
     	KieSession kieSession = kieBase.newKieSession();
-    	DroolsUtility.addListenersToKieSession(kieSession);
+    	
+    	try{
+        	DroolsUtility.addListenersToKieSession(kieSession);
 
-    	// display metadata before executing the rules
-    	displayMetaDataforKieBase(kieBase);
-    	// end display metadatra before executing the rules
-    	
-    	
-    	
-    	// execute rules on kieSession
-		FactType serverType = kieBase
-				.getFactType("com.rhc.drools", "Server");
-		if(serverType == null) throw new RuntimeException("FactType com.rhc.drools.Server not found.");
-				
-		Object debianServer = null;
-		try {
-			debianServer = serverType.newInstance();
-		} catch (InstantiationException e) {
-			System.err.println("the class Server on com.rhc.drools package hasn't a constructor");
-		} catch (IllegalAccessException e) {
-			System.err.println("unable to access the class Server on com.rhc.drools package");
-		}
-		serverType.set(debianServer, "name", "server001");
-		serverType.set(debianServer, "processors", 1);
-		serverType.set(debianServer, "memory", 123);
-		serverType.set(debianServer, "diskSpace", 123);
-		serverType.set(debianServer, "cpuUsage", 1);
-		kieSession.insert(debianServer);
-		
-		FactType outputType = kieBase
-				.getFactType("com.rhc.drools", "OutParameter");
-		if(outputType == null) throw new RuntimeException("FactType com.rhc.drools.OutParameter not found.");
-		
-		Object outParam = null;
-		try {
-			outParam = outputType.newInstance();
-		} catch (InstantiationException e) {
-			System.err.println("the class OutParameter on com.rhc.drools package hasn't a constructor");
-		} catch (IllegalAccessException e) {
-			System.err.println("unable to access the class OutParameter on com.rhc.drools package");
-		}
-		
-		kieSession.setGlobal("out", outParam);
-		kieSession.fireAllRules();		
-		String message = (String) outputType.get(outParam, "message");
-		System.out.println(message);
-    	kieSession.dispose();
-    	// end executing rules
+        	// display metadata before executing the rules
+        	displayMetaDataforKieBase(kieBase);
+        	// end display metadatra before executing the rules
+        	
+        	// execute rules on kieSession
+    		FactType serverType = kieBase
+    				.getFactType("com.rhc.drools", "Server");
+    		if(serverType == null) throw new RuntimeException("FactType com.rhc.drools.Server not found.");
+    				
+    		Object debianServer = null;
+    		try {
+    			debianServer = serverType.newInstance();
+    		} catch (InstantiationException e) {
+    			System.err.println("the class Server on com.rhc.drools package hasn't a constructor");
+    		} catch (IllegalAccessException e) {
+    			System.err.println("unable to access the class Server on com.rhc.drools package");
+    		}
+    		serverType.set(debianServer, "name", "server001");
+    		serverType.set(debianServer, "processors", 1);
+    		serverType.set(debianServer, "memory", 123);
+    		serverType.set(debianServer, "diskSpace", 123);
+    		serverType.set(debianServer, "cpuUsage", 1);
+    		kieSession.insert(debianServer);
+    		
+    		FactType outputType = kieBase
+    				.getFactType("com.rhc.drools", "OutParameter");
+    		if(outputType == null) throw new RuntimeException("FactType com.rhc.drools.OutParameter not found.");
+    		
+    		Object outParam = null;
+    		try {
+    			outParam = outputType.newInstance();
+    		} catch (InstantiationException e) {
+    			System.err.println("the class OutParameter on com.rhc.drools package hasn't a constructor");
+    		} catch (IllegalAccessException e) {
+    			System.err.println("unable to access the class OutParameter on com.rhc.drools package");
+    		}
+    		
+    		kieSession.setGlobal("out", outParam);
+    		kieSession.fireAllRules();
+    		
+    		Object o = searchForOutputInKieSession("com.rhc.drools.OutParameter",kieSession);
+    		
+    		if(o != null){
+    			java.lang.reflect.Field[] fs = o.getClass().getDeclaredFields();
+    			for(java.lang.reflect.Field f: fs)
+    			{
+    				Class<?> targetType = f.getType();
+    				Object objectValue = targetType.newInstance();
+    				f.setAccessible(true);
+    				objectValue = f.get(o); 
+    				logger.info("[fieldname:] {}, [fieldvalue]: {}, [fieldtype]: {}",
+    						f.getName(), objectValue, f.getType().getName());
+    			}
+    		}
+    		
+    		String message = (String) outputType.get(outParam, "message");
+    		System.out.println(message);
+        	// end executing rules    		
+    	}
+    	finally{
+    		kieSession.dispose();
+    	}
+
     }
+   
+   
+   private Object searchForOutputInKieSession(String packageName, KieSession kieSession)
+   {
+	    ObjectFilter payPassFilter = new ObjectFilter() {
+	        @Override
+	        public boolean accept(Object object) {
+	        	return packageName.equals(object.getClass().getName());
+	        }
+	    };
+
+	    for (FactHandle handle : kieSession.getFactHandles(payPassFilter)) {
+	        return kieSession.getObject(handle);
+	    }
+	    return null;
+   }
    
    private void displayMetaDataforKieBase(KieBase kieBase)
    {

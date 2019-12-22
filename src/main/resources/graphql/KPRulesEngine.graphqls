@@ -1,5 +1,11 @@
 type Query {
 	getAllRuleSets(count: Int): [RuleSet]
+	fireAllRulesForRuleSet(
+		ruleSetId: Long, 
+		inserts: [InputFactType], 
+		globals: [InputFactType], 
+		outputParameter_pkg_name: String
+		): OutputParam
 }
 
 type RuleSet{
@@ -28,6 +34,29 @@ type Rule{
 type FactType{
 	package_name: String
 	variable_name: String
-	fields: [String]
+	fields: [Field]
 }
 
+type Field{
+	name: String
+	type: String
+	value: String
+
+}
+
+input InputFactType{
+	package_name: String
+	variable_name: String
+	fields: [InputField]
+}
+
+input InputField{
+	name: String
+	type: String
+	value: String
+}
+
+type OutputParam{
+	package_name: String
+	fields: [Field]
+}
