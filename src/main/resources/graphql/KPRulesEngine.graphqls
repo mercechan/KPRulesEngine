@@ -3,7 +3,9 @@ schema {
 }
 
 type KPRulesEngineQuery {
-	getAllRuleSets(count: Int): [RuleSet]
+	#GetRulesForRuleSet(ruleSetId: Long): [Rules]
+	#GetRulesForRuleSet(String: ruleSetName): [Rules]
+	GetAllRuleSets(count: Int): [RuleSet]
 	fireAllRulesForRuleSet(
 		ruleSetId: Long, 
 		inserts: [InputFactType], 
@@ -50,6 +52,7 @@ type Field{
 
 input InputFactType{
 	package_name: String
+	class_name: String
 	variable_name: String
 	fields: [InputField]
 }

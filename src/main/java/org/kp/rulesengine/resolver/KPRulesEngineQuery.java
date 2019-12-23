@@ -42,14 +42,14 @@ import org.springframework.data.domain.Sort;
 import com.coxautodev.graphql.tools.GraphQLQueryResolver;
 
 @Component
-public class Query implements GraphQLQueryResolver{
-	private static final Logger logger = LoggerFactory.getLogger(Query.class);
+public class KPRulesEngineQuery implements GraphQLQueryResolver{
+	private static final Logger logger = LoggerFactory.getLogger(KPRulesEngineQuery.class);
     @Autowired
     private RulesRepository rulesRepository;
 	@Autowired
 	private RuleSetsRepository ruleSetRepository;
 	
-	public List<RuleSet> getAllRuleSets(int count)
+	public List<RuleSet> GetAllRuleSets(int count)
 	{
 		logger.info("getAllRuleSets called with count: {}",count);
 		List<RuleSets> rss = ruleSetRepository.findAll().stream().limit(count).collect(Collectors.toList());
@@ -139,13 +139,13 @@ public class Query implements GraphQLQueryResolver{
 		OutputParam out = new OutputParam();
 		
 		Pageable pageable = new PageRequest(0,20);
-    	Page<Rules> pageOfRules = rulesRepository.findByRuleSetId(ruleSetId, pageable);
-    	List<Rules> listOfRules = pageOfRules.getContent();		
+    	Page<org.kp.rulesengine.model.Rules> pageOfRules = rulesRepository.findByRuleSetId(ruleSetId, pageable);
+    	List<org.kp.rulesengine.model.Rules> listOfRules = pageOfRules.getContent();		
 		
-		RuleSets rs = null;
+    	org.kp.rulesengine.model.RuleSets rs = null;
 		List<Map<String, Object>> ruleAttributes = new ArrayList<>();
 		Map<String, Object> rule1 = new HashMap<>();
-		for (Rules r: listOfRules)
+		for (org.kp.rulesengine.model.Rules r: listOfRules)
 		{
 			if (rs == null) rs = r.getRuleSet();
 			rule1.put("rule_name", r.getRule_name());
@@ -165,14 +165,14 @@ public class Query implements GraphQLQueryResolver{
        		// process inserts
        		for(InputFactType f: inserts)
        		{
-       			Object droolsObject = createDroolsObject(f.getPackage_name(),f.getVariable_name(),kieBase,f);
+       			Object droolsObject = createDroolsObject(f.getPackage_name(),f.getClass_name(),kieBase,f);
        			kieSession.insert(droolsObject);	
        		}
        		
        		// process globals
        		for(InputFactType f: globals)
        		{
-       			Object droolsObject = createDroolsObject(f.getPackage_name(),f.getVariable_name(),kieBase,f);
+       			Object droolsObject = createDroolsObject(f.getPackage_name(),f.getClass_name(),kieBase,f);
        			kieSession.setGlobal(f.getVariable_name(), droolsObject);       			
        		}
        		
@@ -303,8 +303,6 @@ public class Query implements GraphQLQueryResolver{
 		
 		return debianServer;
 	}
-	
-	
 	
 	private java.sql.Date getDate(String sDate, String format) {
 		SimpleDateFormat df = new SimpleDateFormat(format);
