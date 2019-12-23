@@ -180,6 +180,23 @@ public class TemplateExecutionController {
 	   Collection<KiePackage> pkgs = kieBase.getKiePackages();
 	   for(KiePackage pkg : pkgs)
 	   {
+		   
+		   Collection<org.kie.api.definition.rule.Rule> rules = pkg.getRules();
+		   for (org.kie.api.definition.rule.Rule r: rules) {
+			   Map<String, Object> ruleMetaDataMap = r.getMetaData();
+			   
+			   StringBuilder sb = new StringBuilder("Rule name: " + r.getName());
+			   
+			    if (ruleMetaDataMap.size() > 0) {
+			        sb.append("\n  With [" + ruleMetaDataMap.size() + "] meta-data:");
+			        for (String key : ruleMetaDataMap.keySet()) {
+			            sb.append("\n    key=" + key + ", value="
+			                    + ruleMetaDataMap.get(key));
+			        }
+			    }
+			    logger.debug(sb.toString());
+		   }
+		   
 		   logger.info("[package name]: {}", pkg.getName());
 
 		   // display globals
