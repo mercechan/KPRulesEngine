@@ -6,6 +6,7 @@ type KPRulesEngineQuery {
 	#GetRulesForRuleSet(ruleSetId: Long): [Rules]
 	#GetRulesForRuleSet(String: ruleSetName): [Rules]
 	GetAllRuleSets(count: Int): [RuleSet]
+	#GetRuleSetByName(name: String): [RuleSet]
 	fireAllRulesForRuleSet(
 		ruleSetId: Long, 
 		inserts: [InputFactType], 
