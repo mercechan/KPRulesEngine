@@ -130,6 +130,7 @@ public class KPRulesEngineQuery implements GraphQLQueryResolver{
 		return results;
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public OutputParam fireAllRulesForRuleSet(
 			Long ruleSetId, 
 			List<InputFactType> inserts,
@@ -194,9 +195,23 @@ public class KPRulesEngineQuery implements GraphQLQueryResolver{
     				Field ff = new Field();
     				ff.setName(f.getName());
     				ff.setType(f.getType().getName());
-    				ff.setValue(objectValue.toString());
-    				logger.info("[fieldname:] {}, [fieldvalue]: {}, [fieldtype]: {}",
-    						f.getName(), objectValue, f.getType().getName());
+    				
+    				if ("java.util.List".equals(f.getType()) &&
+    						objectValue instanceof java.util.List)
+    				{
+    					StringBuilder sb = new StringBuilder();
+    					// assuming list contains all primitive types
+    					// like string, in, etc
+    					((java.util.List) objectValue).forEach(c -> sb.append(c));
+    					ff.setValue(sb.toString());
+        				logger.info("[fieldname:] {}, [fieldvalue]: {}, [fieldtype]: {}",
+        						f.getName(), sb.toString(), f.getType().getName());
+    				}else{
+    					ff.setValue(objectValue.toString());
+        				logger.info("[fieldname:] {}, [fieldvalue]: {}, [fieldtype]: {}",
+        						f.getName(), objectValue, f.getType().getName());
+    				}
+    				
     				outFields.add(ff);
     			}
     			
@@ -231,14 +246,14 @@ public class KPRulesEngineQuery implements GraphQLQueryResolver{
 	    return null;
    }
    
-	private Object createDroolsObject(String packageName, String typeName, KieBase kieBase, 
+	private Object createDroolsObject(String packageName, String className, KieBase kieBase, 
 			InputFactType factType)
 	{
 		FactType serverType = kieBase
-				.getFactType(packageName, typeName);
+				.getFactType(packageName, className);
 		if(serverType == null) throw new RuntimeException(String.format(
 				"FactType %s.%s not found.", 
-				packageName,typeName));
+				packageName,className));
 				
 		Object debianServer = null;
 		
@@ -247,12 +262,12 @@ public class KPRulesEngineQuery implements GraphQLQueryResolver{
 			
 		} catch (InstantiationException e) 
 		{
-			logger.error("the class {} on {} package has no constructor",typeName, packageName);
-			throw new RuntimeException(String.format("the class %s on %s package has no constructor",typeName, packageName),e);
+			logger.error("the class {} on {} package has no constructor",className, packageName);
+			throw new RuntimeException(String.format("the class %s on %s package has no constructor",className, packageName),e);
 		} catch (IllegalAccessException e) 
 		{
-			logger.error("unable to access the class {} on {} package",typeName, packageName);
-			throw new RuntimeException(String.format("unable to access the class %s on %s package",typeName, packageName),e);
+			logger.error("unable to access the class {} on {} package",className, packageName);
+			throw new RuntimeException(String.format("unable to access the class %s on %s package",className, packageName),e);
 		}
 		
 		for (org.kp.rulesengine.resolver.Field f: factType.getFields())
