@@ -13,10 +13,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.management.RuntimeErrorException;
 
+import org.apache.poi.util.StringUtil;
 import org.kie.api.KieBase;
 import org.kie.api.definition.KiePackage;
 import org.kie.api.definition.rule.Global;
@@ -33,6 +35,7 @@ import org.kp.rulesengine.utility.DroolsUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
@@ -40,6 +43,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import com.coxautodev.graphql.tools.GraphQLQueryResolver;
+
+import io.micrometer.core.instrument.util.StringUtils;
 
 @Component
 public class KPRulesEngineQuery implements GraphQLQueryResolver{
@@ -51,10 +56,53 @@ public class KPRulesEngineQuery implements GraphQLQueryResolver{
 	
 	public List<RuleSet> GetAllRuleSets(int count)
 	{
+		return getListOfRuleSets(count,"",0L);
+	}
+
+	public RuleSet GetRuleSetByName(String ruleSetName){
+		return getListOfRuleSets(0,ruleSetName,0L).get(0);
+	}
+	
+	public RuleSet GetRuleSetById(Long ruleSetId){
+		return getListOfRuleSets(0,"",ruleSetId).get(0);
+	}
+	
+	private List<RuleSet> getListOfRuleSets(int count, String ruleSetName, Long ruleSetId)
+	{
 		logger.info("getAllRuleSets called with count: {}",count);
-		List<RuleSets> rss = ruleSetRepository.findAll().stream().limit(count).collect(Collectors.toList());
+		List<RuleSets> rss = null;
+		RuleSets result = null;
+		
+		if(count != 0){
+			rss = ruleSetRepository.findAll().stream().limit(count).collect(Collectors.toList());	
+		}else if(!StringUtils.isEmpty(ruleSetName)){
+			RuleSets rs = new RuleSets();
+			rs.setName(ruleSetName);   	
+			Example<RuleSets> example = Example.of(rs);
+			Optional<RuleSets> actual = ruleSetRepository.findOne(example);
+			if(actual.isPresent()){
+				result = actual.get();
+			}else{
+				result = new RuleSets();
+			}
+			if(rss == null) rss = new ArrayList<>();
+			rss.add(result);
+		}else if(StringUtils.isEmpty(ruleSetName) && ruleSetId != 0){
+			RuleSets rs = new RuleSets();
+			rs.setId(ruleSetId);   	
+			Example<RuleSets> example = Example.of(rs);
+			Optional<RuleSets> actual = ruleSetRepository.findOne(example);
+			if(actual.isPresent()){
+				result = actual.get();
+			}else{
+				result = new RuleSets();
+			}
+			if(rss == null) rss = new ArrayList<>();
+			rss.add(result);			
+		}
+		
 		List<RuleSet> results =new ArrayList<>();
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 
 		// Page request [number: 0, size 20, sort: UNSORTED]
 		@SuppressWarnings("deprecation")
@@ -127,17 +175,17 @@ public class KPRulesEngineQuery implements GraphQLQueryResolver{
 		   results.add(ruleset);
 		} // end for each ruleset from database
 
-		return results;
+		return results;		
 	}
-
+	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public OutputParam fireAllRulesForRuleSet(
+	public List<OutputParam> FireAllRulesForRuleSet(
 			Long ruleSetId, 
 			List<InputFactType> inserts,
 			List<InputFactType> globals,
 			String outputParameter_pkg_name) 
 	{
-		OutputParam out = new OutputParam();
+		List<OutputParam> results = new ArrayList<>();
 		
 		Pageable pageable = new PageRequest(0,20);
     	Page<org.kp.rulesengine.model.Rules> pageOfRules = rulesRepository.findByRuleSetId(ruleSetId, pageable);
@@ -145,17 +193,19 @@ public class KPRulesEngineQuery implements GraphQLQueryResolver{
 		
     	org.kp.rulesengine.model.RuleSets rs = null;
 		List<Map<String, Object>> ruleAttributes = new ArrayList<>();
-		Map<String, Object> rule1 = new HashMap<>();
+		
 		for (org.kp.rulesengine.model.Rules r: listOfRules)
 		{
+			Map<String, Object> rule1 = new HashMap<>();
 			if (rs == null) rs = r.getRuleSet();
 			rule1.put("rule_name", r.getRule_name());
 			rule1.put("rule_salience", r.getRule_salience());
 			rule1.put("rule_activationgroup", r.getRule_activationgroup());
 			rule1.put("rule_cond", r.getRule_cond());
 			rule1.put("rule_cons", r.getRule_cons());
+			ruleAttributes.add(rule1);
 		}
-		ruleAttributes.add(rule1);
+
     	InputStream templateStream = new ByteArrayInputStream(rs.getContent().getBytes());
     	KieBase kieBase = DroolsUtility.createKieBase(ruleAttributes, templateStream);
     	KieSession kieSession = kieBase.newKieSession();
@@ -179,71 +229,86 @@ public class KPRulesEngineQuery implements GraphQLQueryResolver{
        		
        		kieSession.fireAllRules();
        		
-       		Object result = searchForOutputInKieSession(outputParameter_pkg_name, kieSession);
-    		
-    		if(result != null)
-    		{
-    			out.setPackage_name(outputParameter_pkg_name);
-    			java.lang.reflect.Field[] fs = result.getClass().getDeclaredFields();
-    			List<Field> outFields = new ArrayList<>();
-    			for(java.lang.reflect.Field f: fs)
-    			{
-    				Class<?> targetType = f.getType();
-    				Object objectValue = targetType.newInstance();
-    				f.setAccessible(true);
-    				objectValue = f.get(result); 
-    				Field ff = new Field();
-    				ff.setName(f.getName());
-    				ff.setType(f.getType().getName());
-    				
-    				if ("java.util.List".equals(f.getType()) &&
-    						objectValue instanceof java.util.List)
-    				{
-    					StringBuilder sb = new StringBuilder();
-    					// assuming list contains all primitive types
-    					// like string, in, etc
-    					((java.util.List) objectValue).forEach(c -> sb.append(c));
-    					ff.setValue(sb.toString());
-        				logger.info("[fieldname:] {}, [fieldvalue]: {}, [fieldtype]: {}",
-        						f.getName(), sb.toString(), f.getType().getName());
-    				}else{
-    					ff.setValue(objectValue.toString());
-        				logger.info("[fieldname:] {}, [fieldvalue]: {}, [fieldtype]: {}",
-        						f.getName(), objectValue, f.getType().getName());
-    				}
-    				
-    				outFields.add(ff);
-    			}
-    			
-    			out.setFields(outFields);
-    		}       		
-       		
-       	} catch (InstantiationException e) {
+       		// Object result = searchForOutputInKieSession(outputParameter_pkg_name, kieSession);
+       		List<Object> outs = searchForOutputParametersInKieSession(outputParameter_pkg_name, kieSession);
+
+       		outs.forEach(result -> {
+	    		if(result != null)
+	    		{
+	    			OutputParam out = new OutputParam();
+	    			out.setPackage_name(outputParameter_pkg_name);
+	    			java.lang.reflect.Field[] fs = result.getClass().getDeclaredFields();
+	    			List<Field> outFields = new ArrayList<>();
+	    			for(java.lang.reflect.Field f: fs)
+	    			{
+	    				Class<?> targetType = f.getType();
+	    				Object objectValue;
+						try {
+							objectValue = targetType.newInstance();
+						} catch (InstantiationException | IllegalAccessException e) {
+							e.printStackTrace();
+							throw new RuntimeException(e);						}
+	    				f.setAccessible(true);
+	    				try {
+							objectValue = f.get(result);
+						} catch (IllegalArgumentException | IllegalAccessException e) {
+							e.printStackTrace();
+							throw new RuntimeException(e);						} 
+	    				Field ff = new Field();
+	    				ff.setName(f.getName());
+	    				ff.setType(f.getType().getName());
+	    				
+	    				if ("java.util.List".equals(f.getType()) &&
+	    						objectValue instanceof java.util.List)
+	    				{
+	    					StringBuilder sb = new StringBuilder();
+	    					// assuming list contains all primitive types
+	    					// like string, in, etc
+	    					((java.util.List) objectValue).forEach(c -> sb.append(c));
+	    					ff.setValue(sb.toString());
+	        				logger.info("[fieldname:] {}, [fieldvalue]: {}, [fieldtype]: {}",
+	        						f.getName(), sb.toString(), f.getType().getName());
+	    				}else{
+	    					ff.setValue(objectValue.toString());
+	        				logger.info("[fieldname:] {}, [fieldvalue]: {}, [fieldtype]: {}",
+	        						f.getName(), objectValue, f.getType().getName());
+	    				}
+	    				
+	    				outFields.add(ff);
+	    			}
+	    			out.setFields(outFields);
+	    			results.add(out);
+	    		}	
+       		});
+       	} 
+       	catch(Exception e)
+       	{
 			e.printStackTrace();
-			throw new RuntimeException(e);
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		}finally{
+			throw new RuntimeException(e);       		
+       	}
+       	finally{
        		kieSession.dispose();
        	}
     	
-		return out;
+		return results;
 	}
 
-   private Object searchForOutputInKieSession(String packageName, KieSession kieSession)
+   private List<Object> searchForOutputParametersInKieSession(String packageName, KieSession kieSession)
    {
-	    ObjectFilter payPassFilter = new ObjectFilter() {
-	        @Override
-	        public boolean accept(Object object) {
-	        	return packageName.equals(object.getClass().getName());
-	        }
-	    };
+	   	List<Object> results = new ArrayList<>();
+		ObjectFilter payPassFilter = new ObjectFilter() {
+		    @Override
+		    public boolean accept(Object object) {
+		    	return packageName.equals(object.getClass().getName());
+		    }
+		};
 
-	    for (FactHandle handle : kieSession.getFactHandles(payPassFilter)) {
-	        return kieSession.getObject(handle);
+	    for(Object obj: kieSession.getObjects(payPassFilter))
+	    {
+	    	results.add(obj);
 	    }
-	    return null;
+
+	    return results;
    }
    
 	private Object createDroolsObject(String packageName, String className, KieBase kieBase, 
@@ -302,11 +367,11 @@ public class KPRulesEngineQuery implements GraphQLQueryResolver{
 			}else if("java.sql.Date".equals(f.getType())){
 				// java.sql.Date
 				java.sql.Date curDate = 
-						getDate(f.getValue(), "yyyy-mm-dd hh:mm:ss");
+						getDate(f.getValue(), "yyyy-MM-dd hh:mm:ss");
 				serverType.set(debianServer, f.getName(), curDate);
 				
 			}else if("java.util.Date".equals(f.getType())){
-				DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
+				DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 				try {
 					serverType.set(debianServer, f.getName(), dateFormat.parse(f.getValue()));
 				} catch (ParseException e) {
@@ -330,7 +395,44 @@ public class KPRulesEngineQuery implements GraphQLQueryResolver{
 		}
 	}	
 	
-	
+	public List<org.kp.rulesengine.resolver.Rule> GetRulesByRuleSetName(String ruleSetName)
+	{
+		Pageable pageable = new PageRequest(0,20);
+    	Page<org.kp.rulesengine.model.Rules> pageOfRules = rulesRepository.findByRuleSetName(ruleSetName, pageable);
+    	List<org.kp.rulesengine.model.Rules> listOfRules = pageOfRules.getContent();		
+		
+    	List<org.kp.rulesengine.resolver.Rule> results = new ArrayList<>();
+    	DateFormat df = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+    	
+    	if (listOfRules != null && listOfRules.size() > 0){
+    		for(org.kp.rulesengine.model.Rules r: listOfRules)
+    		{
+    			org.kp.rulesengine.resolver.RuleSet tmpRs = new org.kp.rulesengine.resolver.RuleSet();
+    			org.kp.rulesengine.resolver.Rule tmp = new org.kp.rulesengine.resolver.Rule();
+    			tmp.setCreatedAt(df.format(r.getCreatedAt()));
+    			tmp.setUpdatedAt(df.format(r.getUpdatedAt()));
+    			tmp.setId(r.getId());
+    			tmp.setRule_activationgroup(r.getRule_activationgroup());
+    			tmp.setRule_cond(r.getRule_cond());
+    			tmp.setRule_cons(r.getRule_cons());
+    			tmp.setRule_name(r.getRule_name());
+    			tmp.setRule_salience(r.getRule_salience());
+    			
+    			// inner RuleSet object
+    			tmpRs.setContent(r.getRuleSet().getContent());
+    			tmpRs.setCreatedAt(df.format(r.getRuleSet().getCreatedAt()));
+    			tmpRs.setUpdatedAt(df.format(r.getRuleSet().getUpdatedAt()));
+    			tmpRs.setId(r.getRuleSet().getId());
+    			tmpRs.setName(r.getRuleSet().getName());
+    			tmpRs.setPackage_name(r.getRuleSet().getPackage_name());
+    			tmp.setRule_set(tmpRs);
+    			// end inner ruleset object
+    			
+    			results.add(tmp);
+    		}
+    	}
+    	return results;
+	}
 	
 }
 

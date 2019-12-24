@@ -3,16 +3,16 @@ schema {
 }
 
 type KPRulesEngineQuery {
-	#GetRulesForRuleSet(ruleSetId: Long): [Rules]
-	#GetRulesForRuleSet(String: ruleSetName): [Rules]
 	GetAllRuleSets(count: Int): [RuleSet]
-	#GetRuleSetByName(name: String): [RuleSet]
-	fireAllRulesForRuleSet(
+	GetRuleSetByName(name: String): RuleSet
+	GetRuleSetById(ruleSetId: Long): RuleSet
+	GetRulesByRuleSetName(ruleSetName: String): [Rule]
+	FireAllRulesForRuleSet(
 		ruleSetId: Long, 
 		inserts: [InputFactType], 
 		globals: [InputFactType], 
 		outputParameter_pkg_name: String
-		): OutputParam
+		): [OutputParam]
 }
 
 type RuleSet{

@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 
@@ -14,4 +15,5 @@ import java.util.Optional;
 public interface RulesRepository extends JpaRepository<Rules, Long> {
     Page<Rules> findByRuleSetId (Long ruleSetId, Pageable pageable);
     Optional<Rules> findByIdAndRuleSetId (Long id, Long ruleSetId);
+    Page<Rules> findByRuleSetName (String ruleSetName, Pageable pageable);
 }

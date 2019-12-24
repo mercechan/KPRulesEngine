@@ -51,7 +51,7 @@ public class RuleSetController {
     }
     
     @GetMapping("/rulesets/names/{ruleSetName}")
-    public RuleSets getOneRuleSetById(@PathVariable String ruleSetName){
+    public RuleSets getOneRuleSetByName(@PathVariable String ruleSetName){
     	RuleSets result = null;
 
 		RuleSets rs = new RuleSets();

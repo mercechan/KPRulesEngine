@@ -1,5 +1,7 @@
 package org.kp.rulesengine.controller;
 
+import java.util.List;
+
 import javax.validation.Valid;
 
 import org.kp.rulesengine.exception.ResourceNotFoundException;
@@ -33,6 +35,7 @@ public class RulesController {
     public Page<Rules> getAllRulesByRuleSetId(@PathVariable (value = "ruleSetId") Long ruleSetId,
                                                 Pageable pageable) {
         return rulesRepository.findByRuleSetId(ruleSetId, pageable);
+    	
     }	
 	
     
