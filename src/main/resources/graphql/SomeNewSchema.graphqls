@@ -1,0 +1,9 @@
+extend type KPRulesEngineQuery {
+    findAllCharacters: [Character]!
+}
+
+type Character{
+	id: Long
+	name: String
+	ssn: String
+}
